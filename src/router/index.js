@@ -1,25 +1,73 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import Home from "@/views/public/Home.vue";
+import Cocktail from "@/views/public/Cocktail.vue";
+import Contact from "@/views/public/Contact.vue";
+import PublicLayout from "@/views/public/Layout.vue";
+
+import AdminLayout from "@/views/admin/Layout.vue";
+import Dashboard from "@/views/admin/Dashboard.vue";
+
+import UserIndex from "@/views/admin/users/UserIndex.vue";
+import UserEdit from "@/views/admin/users/UserEdit.vue";
+import UserAdd from "@/views/admin/users/UserAdd.vue";
+
+import CocktailEdit from "@/views/admin/cocktails/CocktailEdit.vue";
+import CocktailIndex from "@/views/admin/cocktails/CocktailIndex.vue";
+
+import Login from "@/views/auth/Login.vue";
+import { authGuard } from "@/_helpers/auth-guard";
 
 const routes = [
   {
-    path: '/',
-    name: 'home',
-    component: HomeView
+    path: "/",
+    name: "public",
+    component: PublicLayout,
+    children: [
+      { path: "/", name: "home", component: Home },
+      { path: "/cocktails", name: "cocktails", component: Cocktail },
+      { path: "/contact", name: "contact", component: Contact },
+    ],
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
-]
+    path: "/admin",
+    name: "admin",
+    // beforeEnter: authGuard,
+    component: AdminLayout,
+    children: [
+      { path: "dashboard", name: "dashboard", component: Dashboard },
+      { path: "users/index", component: UserIndex },
+      { path: "users/edit/:id(\\d+)", component: UserEdit, props: true },
+      { path: "users/add", component: UserAdd },
+      { path: "cocktails/index", component: CocktailIndex },
+      { path: "cocktails/edit", component: CocktailEdit },
+      { path: "/:pathMatch(.*)*", redirect: "/admin/dashboard" }
+    ],
+  },
+  {
+    path: "/login",
+    name: "login",
+    component: Login
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: "/",
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
-})
+  routes,
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+  console.log(to);
+  if(to.matched[0].name == 'admin') {
+    authGuard();
+  }
+  // if(to.meta.requiresAuth) {
+  //   authGuard();
+  // }
+  next();
+});
+
+export default router;
